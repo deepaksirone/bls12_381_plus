@@ -10,10 +10,12 @@
 
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![feature(lang_items)]
+#![feature(alloc_error_handler)]
 // Catch documentation errors caused by code changes.
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(missing_debug_implementations)]
-#![deny(missing_docs)]
+//#![deny(missing_docs)]
 // #![deny(unsafe_code)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::many_single_char_names)]
@@ -23,8 +25,56 @@
 // involve various binary operators, and so this lint is triggered unnecessarily.
 #![allow(clippy::suspicious_arithmetic_impl)]
 
+use core::alloc::Layout;
+use core::panic::PanicInfo;
+use core::sync::atomic::{AtomicPtr, Ordering};
+use core::{mem, ptr};
+
+//pub use alloc::alloc::*;
+
 #[cfg(feature = "alloc")]
 extern crate alloc;
+pub use alloc::alloc::*;
+
+extern crate sgx_alloc;
+
+#[global_allocator]
+static ALLOC: sgx_alloc::System = sgx_alloc::System;
+
+#[lang = "eh_personality"]
+#[no_mangle]
+unsafe extern "C" fn rust_eh_personality() {}
+
+static HOOK: AtomicPtr<()> = AtomicPtr::new(ptr::null_mut());
+fn default_alloc_error_hook(_layout: Layout) {}
+
+#[panic_handler]
+fn begin_panic_handler(_info: &PanicInfo<'_>) -> ! {
+    sgx_abort();
+}
+
+#[link(name = "sgx_trts")]
+extern "C" {
+    pub fn abort() -> !;
+}
+
+fn sgx_abort() -> ! {
+    unsafe { abort() }
+}
+
+#[alloc_error_handler]
+pub fn rust_oom(layout: Layout) -> ! {
+    let hook = HOOK.load(Ordering::SeqCst);
+    let hook: fn(Layout) = if hook.is_null() {
+        default_alloc_error_hook
+    } else {
+        unsafe { mem::transmute(hook) }
+    };
+    hook(layout);
+    sgx_abort();
+}
+
+
 
 #[cfg(any(test, feature = "std"))]
 #[macro_use]
