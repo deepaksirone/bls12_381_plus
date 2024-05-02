@@ -25,10 +25,10 @@
 // involve various binary operators, and so this lint is triggered unnecessarily.
 #![allow(clippy::suspicious_arithmetic_impl)]
 
-use core::alloc::Layout;
-use core::panic::PanicInfo;
-use core::sync::atomic::{AtomicPtr, Ordering};
-use core::{mem, ptr};
+//use core::alloc::Layout;
+//use core::panic::PanicInfo;
+//use core::sync::atomic::{AtomicPtr, Ordering};
+//use core::{mem, ptr};
 
 //pub use alloc::alloc::*;
 
@@ -36,9 +36,10 @@ use core::{mem, ptr};
 extern crate alloc;
 pub use alloc::alloc::*;
 
-extern crate sgx_alloc;
+//extern crate sgx_alloc;
+extern crate sgx_tstd;
 
-#[global_allocator]
+/*#[global_allocator]
 static ALLOC: sgx_alloc::System = sgx_alloc::System;
 
 #[lang = "eh_personality"]
@@ -72,7 +73,7 @@ pub fn rust_oom(layout: Layout) -> ! {
     };
     hook(layout);
     sgx_abort();
-}
+}*/
 
 
 

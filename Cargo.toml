@@ -22,7 +22,7 @@ build = "build.rs"
 rustdoc-args = [ "--html-in-header", "katex-header.html" ]
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [dev-dependencies]
 hex = "0.4"
@@ -89,7 +89,7 @@ version = "0.3"
 version = "0.10"
 default-features = false
 
-[dependencies.sgx_alloc]
+[dependencies.sgx_tstd]
 git = "https://github.com/deepaksirone/incubator-teaclave-sgx-sdk"
 
 [features]
